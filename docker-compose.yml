@@ -1,0 +1,49 @@
+name: todo-app
+
+volumes:
+  app-vol:
+  db-vol:
+
+networks:
+  backend:
+    name: backend
+    driver: bridge
+
+services:
+  database:
+    image: couchbase:community-7.6.1
+    restart: on-failure
+    ports:
+      - "8091:8091"
+      - "8092:8092"
+      - "8093:8093"
+      - "8094:8094"
+      - "11210:11210"
+    environment:
+      - CLUSTER_USERNAME= Administrator
+      - CLUSTER_PASSWORD= 123456
+      - SERVICES= data,index,query,fts
+      - CLUSTER_NAME= todoapp
+      - BUCKET= todoapp
+      - COUCHBASE_BUCKET_RAMSIZE= 512
+      - COUCHBASE_RAM_SIZE=2048
+      - COUCHBASE_INDEX_RAM_SIZE=512
+    volumes:
+      - db-vol:/home/node/couchbase
+    networks:
+      - backend
+
+  app:
+    build: .
+    restart: on-failure
+    container_name: app
+    environment:
+      - COUCHBASE_HOST= database
+    depends_on:
+      - database
+    ports:
+      - "8080:8080"
+    volumes:
+      - app-vol:/home/node/todo-app
+    networks:
+      - backend
