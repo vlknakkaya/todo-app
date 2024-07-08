@@ -20,7 +20,7 @@ public class UserService {
 
     public User findByUsernameIgnoreCase(String username) throws UserNotFoundException {
         return userRepository.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new UserNotFoundException("email", username));
+                .orElseThrow(() -> new UserNotFoundException("username", username));
     }
 
     public List<User> searchUser(String firstName, String lastName) {
