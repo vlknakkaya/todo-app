@@ -1,63 +1,63 @@
 package com.todoapp.service;
 
 import com.todoapp.exception.types.UserNotFoundException;
+import com.todoapp.model.dto.UpdateUserRequestDTO;
 import com.todoapp.model.entity.User;
 import com.todoapp.repository.UserRepository;
+import com.todoapp.service.auth.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthService authService) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authService = authService;
     }
 
-    public User findByUsernameIgnoreCase(String username) throws UserNotFoundException {
-        return userRepository.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new UserNotFoundException("username", username));
+    public User getLoggedUser() {
+        return authService.getLoggedUser();
     }
 
-    public List<User> searchUser(String firstName, String lastName) {
-        return userRepository.searchUser(firstName, lastName);
-    }
+    public User update(UpdateUserRequestDTO requestDTO) throws UserNotFoundException {
+        User user = authService.getLoggedUser();
 
-    public User getById(String id) throws UserNotFoundException {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("id", id));
-    }
+        if (requestDTO.getUsername() != null) {
+            user.setUsername(user.getUsername());
+        }
+        if (requestDTO.getFirstName() != null) {
+            user.setFirstName(user.getFirstName());
+        }
+        if (requestDTO.getLastName() != null) {
+            user.setLastName(user.getLastName());
+        }
 
-    public User create(User user) {
         return userRepository.save(user);
     }
 
-    public User update(String id, User user) throws UserNotFoundException {
-        User foundedUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("id", id));
-
-        if (user.getFirstName() != null) {
-            foundedUser.setFirstName(user.getFirstName());
-        }
-        if (user.getLastName() != null) {
-            foundedUser.setLastName(user.getLastName());
-        }
-        if (user.getUsername() != null) {
-            foundedUser.setUsername(user.getUsername());
-        }
-        if (user.getPassword() != null) {
-            foundedUser.setPassword(user.getPassword());
-        }
-
-        return userRepository.save(foundedUser);
+    public void deleteUser() {
+        userRepository.delete(authService.getLoggedUser());
     }
 
-    public void deleteById(String id) {
-        userRepository.deleteById(id);
+    public Boolean changePassword(String oldPassword, String newPassword) {
+        User user = authService.getLoggedUser();
+        if (!user.getPassword().equals(passwordEncoder.encode(oldPassword))) {
+            throw new BadCredentialsException("Wrong password");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return Boolean.TRUE;
     }
 
 }

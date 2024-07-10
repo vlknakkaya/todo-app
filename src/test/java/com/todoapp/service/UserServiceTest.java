@@ -1,18 +1,17 @@
 package com.todoapp.service;
 
-import com.todoapp.exception.types.UserNotFoundException;
+import com.todoapp.model.dto.ChangePasswordRequestDTO;
+import com.todoapp.model.dto.UpdateUserRequestDTO;
 import com.todoapp.model.entity.User;
 import com.todoapp.repository.UserRepository;
+import com.todoapp.service.auth.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Collections;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -27,73 +26,52 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    @Test
-    void test_findByUsernameIgnoreCase() {
-        String username = "username";
+    @Mock
+    private AuthService authService;
 
-        when(userRepository.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(dummyUser()));
-
-        userService.findByUsernameIgnoreCase(username);
-
-        verify(userRepository, times(1)).findByUsernameIgnoreCase(username);
-    }
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @Test
-    void test_findByUsernameIgnoreCase_notFound() {
-        assertThrows(UserNotFoundException.class, () -> userService.findByUsernameIgnoreCase("username"));
-    }
+    void test_getLoggedUser() {
+        userService.getLoggedUser();
 
-    @Test
-    void test_searchUser() {
-        when(userRepository.searchUser(any(), any())).thenReturn(Collections.singletonList(dummyUser()));
-
-        userService.searchUser(any(), any());
-
-        verify(userRepository, times(1)).searchUser(any(), any());
-    }
-
-    @Test
-    void test_getById() {
-        when(userRepository.findById(any())).thenReturn(Optional.of(dummyUser()));
-
-        userService.getById(any());
-
-        verify(userRepository, times(1)).findById(any());
-    }
-
-    @Test
-    void test_getById_notFound() {
-        assertThrows(UserNotFoundException.class, () -> userService.getById("12345"));
-    }
-
-    @Test
-    void test_create() {
-        userService.create(dummyUser());
-
-        verify(userRepository, times(1)).save(any());
+        verify(authService, times(1)).getLoggedUser();
     }
 
     @Test
     void test_update() {
-        when(userRepository.findById(any())).thenReturn(Optional.of(dummyUser()));
+        User user = dummyUser();
+        UpdateUserRequestDTO updateUserRequestDTO = new UpdateUserRequestDTO(null, "test", "test");
 
-        userService.update("123456", dummyUser());
+        when(authService.getLoggedUser()).thenReturn(user);
 
+        userService.update(updateUserRequestDTO);
+
+        verify(authService, times(1)).getLoggedUser();
         verify(userRepository, times(1)).save(any());
     }
 
     @Test
-    void test_update_notFound() {
-        assertThrows(UserNotFoundException.class, () -> userService.update("12345", dummyUser()));
+    void test_deleteUser() {
+        userService.deleteUser();
+
+        verify(authService, times(1)).getLoggedUser();
+        verify(userRepository, times(1)).delete(any());
     }
 
     @Test
-    void test_deleteById() {
-        String id = "12345";
+    void test_changePassword() {
+        User user = dummyUser();
+        ChangePasswordRequestDTO changePasswordRequestDTO = new ChangePasswordRequestDTO(user.getPassword(), "test");
 
-        userService.deleteById(id);
+        when(passwordEncoder.encode(any())).thenReturn(user.getPassword());
+        when(authService.getLoggedUser()).thenReturn(user);
 
-        verify(userRepository, times(1)).deleteById(id);
+        userService.changePassword(changePasswordRequestDTO.getOldPassword(), changePasswordRequestDTO.getNewPassword());
+
+        verify(authService, times(1)).getLoggedUser();
+        verify(userRepository, times(1)).save(any());
     }
 
     private User dummyUser() {

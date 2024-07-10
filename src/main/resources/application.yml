@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: todo-app
+
+springdoc:
+  swagger-ui:
+    path: /api-docs
+
+application:
+  security:
+    jwt:
+      secret-key: dummy
+      expiration: 3600000 # 1 hour

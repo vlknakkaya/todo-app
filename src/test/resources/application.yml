@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: todo-app
+
+application:
+  security:
+    jwt:
+      secret-key: dummy
+      expiration: 3600000 # 1 hour

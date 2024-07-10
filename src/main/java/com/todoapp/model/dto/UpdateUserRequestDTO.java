@@ -1,18 +1,23 @@
 package com.todoapp.model.dto;
 
-public class UserDTO {
+public class UpdateUserRequestDTO {
 
-    private String id;
+    private String username;
     private String firstName;
     private String lastName;
-    private String username;
 
-    public String getId() {
-        return id;
+    public UpdateUserRequestDTO(String username, String firstName, String lastName) {
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getFirstName() {
@@ -30,13 +35,4 @@ public class UserDTO {
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
 }

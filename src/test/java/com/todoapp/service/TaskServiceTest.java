@@ -2,10 +2,12 @@ package com.todoapp.service;
 
 import com.todoapp.exception.types.TaskNotFoundException;
 import com.todoapp.exception.types.UnknownTaskStatusException;
+import com.todoapp.model.dto.UpdateTaskRequestDTO;
 import com.todoapp.model.entity.Task;
 import com.todoapp.model.entity.TaskStatus;
 import com.todoapp.model.entity.User;
 import com.todoapp.repository.TaskRepository;
+import com.todoapp.service.auth.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,25 +31,37 @@ class TaskServiceTest {
     @Mock
     private TaskRepository taskRepository;
 
+    @Mock
+    private AuthService authService;
+
     @Test
     void test_findByTitleContainingIgnoreCase() {
-        taskService.findByTitleContainingIgnoreCase(any());
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
 
-        verify(taskRepository, times(1)).findByTitleContainingIgnoreCase(any());
+        taskService.findByTitleContainingIgnoreCase("title");
+
+        verify(authService, times(1)).getLoggedUser();
+        verify(taskRepository, times(1)).findByUserAndTitleContainingIgnoreCase(any(), any());
     }
 
     @Test
     void test_findByDescriptionContainingIgnoreCase() {
-        taskService.findByDescriptionContainingIgnoreCase(any());
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
 
-        verify(taskRepository, times(1)).findByDescriptionContainingIgnoreCase(any());
+        taskService.findByDescriptionContainingIgnoreCase("description");
+
+        verify(authService, times(1)).getLoggedUser();
+        verify(taskRepository, times(1)).findByUserAndDescriptionContainingIgnoreCase(any(), any());
     }
 
     @Test
     void test_findByStatus() {
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+
         taskService.findByStatus(TaskStatus.DONE.getName());
 
-        verify(taskRepository, times(1)).findByStatus(any());
+        verify(authService, times(1)).getLoggedUser();
+        verify(taskRepository, times(1)).findByUserAndStatus(any(), any());
     }
 
     @Test
@@ -57,45 +71,59 @@ class TaskServiceTest {
 
     @Test
     void test_findAllForLoggedUser() {
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+
         taskService.findAllForLoggedUser();
 
+        verify(authService, times(1)).getLoggedUser();
         verify(taskRepository, times(1)).findByUser(any());
     }
 
     @Test
     void test_getById() {
-        when(taskRepository.findById(any())).thenReturn(Optional.of(dummyTask()));
+        User user = dummyUser();
+        when(authService.getLoggedUser()).thenReturn(user);
+        when(taskRepository.findByUserAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
 
-        taskService.getById(any());
+        taskService.getById("123");
 
-        verify(taskRepository, times(1)).findById(any());
+        verify(taskRepository, times(1)).findByUserAndId(user, "123");
     }
 
     @Test
     void test_getById_notFound() {
-        assertThrows(TaskNotFoundException.class, () -> taskService.getById(any()));
+        assertThrows(TaskNotFoundException.class, () -> taskService.getById("123"));
     }
 
     @Test
     void test_create() {
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+
         taskService.create(dummyTask());
 
+        verify(authService, times(1)).getLoggedUser();
         verify(taskRepository, times(1)).save(any());
     }
 
     @Test
     void test_update() {
-        when(taskRepository.findById(any())).thenReturn(Optional.of(dummyTask()));
+        UpdateTaskRequestDTO updateTaskRequestDTO = new UpdateTaskRequestDTO("title", "description");
 
-        taskService.update("123456", dummyTask());
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+        when(taskRepository.findByUserAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
 
-        verify(taskRepository, times(1)).findById(any());
+        taskService.update("123456", updateTaskRequestDTO);
+
+        verify(authService, times(1)).getLoggedUser();
+        verify(taskRepository, times(1)).findByUserAndId(any(), any());
         verify(taskRepository, times(1)).save(any());
     }
 
     @Test
     void test_update_notFound() {
-        assertThrows(TaskNotFoundException.class, () -> taskService.update("123456", dummyTask()));
+        UpdateTaskRequestDTO updateTaskRequestDTO = new UpdateTaskRequestDTO("title", "description");
+
+        assertThrows(TaskNotFoundException.class, () -> taskService.update("123456", updateTaskRequestDTO));
     }
 
     @Test
@@ -107,11 +135,12 @@ class TaskServiceTest {
 
     @Test
     void test_changeStatus() {
-        when(taskRepository.findById(any())).thenReturn(Optional.of(dummyTask()));
+        when(taskRepository.findByUserAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
 
         taskService.changeStatus("12345", TaskStatus.DONE.getName());
 
-        verify(taskRepository, times(1)).findById(any());
+        verify(authService, times(1)).getLoggedUser();
+        verify(taskRepository, times(1)).findByUserAndId(any(), any());
         verify(taskRepository, times(1)).save(any());
     }
 
@@ -122,7 +151,7 @@ class TaskServiceTest {
 
     @Test
     void test_changeStatus_unknownStatus() {
-        when(taskRepository.findById(any())).thenReturn(Optional.of(dummyTask()));
+        when(taskRepository.findByUserAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
 
         assertThrows(UnknownTaskStatusException.class, () -> taskService.changeStatus("123456", "xyz"));
     }
@@ -136,6 +165,17 @@ class TaskServiceTest {
         task.setUser(new User());
 
         return task;
+    }
+
+    private User dummyUser() {
+        User user = new User();
+        user.setId("12345");
+        user.setFirstName("firstName");
+        user.setLastName("lastName");
+        user.setUsername("username");
+        user.setPassword("password");
+
+        return user;
     }
 
 }

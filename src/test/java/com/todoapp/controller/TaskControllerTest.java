@@ -5,6 +5,7 @@ import com.todoapp.exception.ErrorCodes;
 import com.todoapp.exception.types.TaskNotFoundException;
 import com.todoapp.exception.types.UnknownTaskStatusException;
 import com.todoapp.model.dto.TaskDTO;
+import com.todoapp.model.dto.UpdateTaskRequestDTO;
 import com.todoapp.model.entity.Task;
 import com.todoapp.model.entity.TaskStatus;
 import com.todoapp.model.entity.User;
@@ -234,13 +235,14 @@ class TaskControllerTest {
     @Test
     void test_updateTask() throws Exception {
         Task task = dummyEntity();
+        UpdateTaskRequestDTO requestDTO = new UpdateTaskRequestDTO(null, "newDesc");
 
         when(taskService.update(anyString(), any())).thenReturn(task);
 
         mockMvc.perform(
                         put("/tasks/{id}", task.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(new ObjectMapper().writeValueAsString(dummyDTO()))
+                                .content(new ObjectMapper().writeValueAsString(requestDTO))
                                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -256,7 +258,7 @@ class TaskControllerTest {
         mockMvc.perform(
                         put("/tasks/{id}", "test")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(new ObjectMapper().writeValueAsString(dummyDTO()))
+                                .content(new ObjectMapper().writeValueAsString(null))
                                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

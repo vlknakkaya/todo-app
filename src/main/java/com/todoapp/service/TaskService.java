@@ -2,10 +2,11 @@ package com.todoapp.service;
 
 import com.todoapp.exception.types.TaskNotFoundException;
 import com.todoapp.exception.types.UnknownTaskStatusException;
+import com.todoapp.model.dto.UpdateTaskRequestDTO;
 import com.todoapp.model.entity.Task;
 import com.todoapp.model.entity.TaskStatus;
-import com.todoapp.model.entity.User;
 import com.todoapp.repository.TaskRepository;
+import com.todoapp.service.auth.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,50 +16,49 @@ import java.util.List;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final AuthService authService;
 
     @Autowired
-    public TaskService(TaskRepository taskRepository) {
+    public TaskService(TaskRepository taskRepository, AuthService authService) {
         this.taskRepository = taskRepository;
+        this.authService = authService;
     }
 
     public List<Task> findByTitleContainingIgnoreCase(String title) {
-        return taskRepository.findByTitleContainingIgnoreCase(title);
+        return taskRepository.findByUserAndTitleContainingIgnoreCase(authService.getLoggedUser(), title);
     }
 
     public List<Task> findByDescriptionContainingIgnoreCase(String description) {
-        return taskRepository.findByDescriptionContainingIgnoreCase(description);
+        return taskRepository.findByUserAndDescriptionContainingIgnoreCase(authService.getLoggedUser(), description);
     }
 
     public List<Task> findByStatus(String status) throws UnknownTaskStatusException {
-        return taskRepository.findByStatus(TaskStatus.of(status));
+        return taskRepository.findByUserAndStatus(authService.getLoggedUser(), TaskStatus.of(status));
     }
 
     public List<Task> findAllForLoggedUser() {
-        User loggedUser = null; // TODO: set user
-        return taskRepository.findByUser(loggedUser);
+        return taskRepository.findByUser(authService.getLoggedUser());
     }
 
     public Task getById(String id) throws TaskNotFoundException {
-        return taskRepository.findById(id)
+        return taskRepository.findByUserAndId(authService.getLoggedUser(), id)
                 .orElseThrow(() -> new TaskNotFoundException("id", id));
     }
 
     public Task create(Task task) {
-        task.setUser(null); // TODO: set user
+        task.setUser(authService.getLoggedUser());
+
         return taskRepository.save(task);
     }
 
-    public Task update(String id, Task task) throws TaskNotFoundException {
+    public Task update(String id, UpdateTaskRequestDTO updatedTask) throws TaskNotFoundException {
         Task foundedTask = getById(id);
 
-        if (task.getTitle() != null) {
-            foundedTask.setTitle(task.getTitle());
+        if (updatedTask.getTitle() != null) {
+            foundedTask.setTitle(updatedTask.getTitle());
         }
-        if (task.getDescription() != null) {
-            foundedTask.setDescription(task.getDescription());
-        }
-        if (task.getStatus() != null) {
-            foundedTask.setStatus(task.getStatus());
+        if (updatedTask.getDescription() != null) {
+            foundedTask.setDescription(updatedTask.getDescription());
         }
 
         return taskRepository.save(foundedTask);

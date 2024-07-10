@@ -1,6 +1,7 @@
 package com.todoapp.controller;
 
 import com.todoapp.model.dto.TaskDTO;
+import com.todoapp.model.dto.UpdateTaskRequestDTO;
 import com.todoapp.model.entity.Task;
 import com.todoapp.model.mapper.TaskMapper;
 import com.todoapp.service.TaskService;
@@ -73,8 +74,8 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TaskDTO> updateTask(@PathVariable String id, @RequestBody TaskDTO taskDTO) {
-        Task task = taskService.update(id, taskMapper.toEntity(taskDTO));
+    public ResponseEntity<TaskDTO> updateTask(@PathVariable String id, @RequestBody UpdateTaskRequestDTO updateTaskRequestDTO) {
+        Task task = taskService.update(id, updateTaskRequestDTO);
 
         return ResponseEntity.ok(taskMapper.toDto(task));
     }

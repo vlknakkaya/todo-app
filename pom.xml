@@ -22,6 +22,8 @@
         <openapi.version>2.4.0</openapi.version>
         <mapstruct.version>1.6.0.Beta1</mapstruct.version>
         <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
+        <jsonwebtoken.version>0.9.1</jsonwebtoken.version>
+        <jaxb-api.version>2.3.0</jaxb-api.version>
     </properties>
 
     <dependencies>
@@ -32,6 +34,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
@@ -51,6 +57,17 @@
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${mapstruct.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>${jsonwebtoken.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>${jaxb-api.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
