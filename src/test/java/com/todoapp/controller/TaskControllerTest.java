@@ -11,6 +11,7 @@ import com.todoapp.model.entity.TaskStatus;
 import com.todoapp.model.entity.User;
 import com.todoapp.model.mapper.TaskMapper;
 import com.todoapp.service.TaskService;
+import com.todoapp.service.auth.JwtService;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
@@ -20,6 +21,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
@@ -29,6 +31,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -49,15 +52,19 @@ class TaskControllerTest {
     @Mock
     private TaskMapper taskMapper;
 
+    @MockBean
+    private JwtService jwtService;
+
     @Test
+    @WithMockUser("spring")
     void test_getById() throws Exception {
         Task task = dummyEntity();
 
         when(taskService.getById(task.getId())).thenReturn(task);
 
         mockMvc.perform(
-                        get("/tasks/{id}", task.getId())
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks/{id}", task.getId())
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(task.getId()));
@@ -66,26 +73,28 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_getById_notFound() throws Exception {
         when(taskService.getById(any())).thenThrow(TaskNotFoundException.class);
 
         mockMvc.perform(
-                        get("/tasks/{id}", "123")
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks/{id}", "123")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errorCode").value(ErrorCodes.TASK_NOT_FOUND));
     }
 
     @Test
+    @WithMockUser("spring")
     void test_searchByTitle() throws Exception {
         Task task = dummyEntity();
 
         when(taskService.findByTitleContainingIgnoreCase(task.getTitle())).thenReturn(Collections.singletonList(task));
 
         mockMvc.perform(
-                        get("/tasks/title/{title}", task.getTitle())
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks/title/{title}", task.getTitle())
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
@@ -95,12 +104,13 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_searchByTitle_notFound() throws Exception {
         when(taskService.findByTitleContainingIgnoreCase(any())).thenReturn(Collections.emptyList());
 
         mockMvc.perform(
-                        get("/tasks/title/{title}", "test")
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks/title/{title}", "test")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
@@ -110,14 +120,15 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_searchByDescription() throws Exception {
         Task task = dummyEntity();
 
         when(taskService.findByDescriptionContainingIgnoreCase(task.getDescription())).thenReturn(Collections.singletonList(task));
 
         mockMvc.perform(
-                        get("/tasks/description/{description}", task.getDescription())
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks/description/{description}", task.getDescription())
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
@@ -127,12 +138,13 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_searchByDescription_notFound() throws Exception {
         when(taskService.findByDescriptionContainingIgnoreCase(any())).thenReturn(Collections.emptyList());
 
         mockMvc.perform(
-                        get("/tasks/description/{description}", "test")
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks/description/{description}", "test")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
@@ -142,14 +154,15 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_getByStatus() throws Exception {
         Task task = dummyEntity();
 
         when(taskService.findByStatus(task.getStatus().getName())).thenReturn(Collections.singletonList(task));
 
         mockMvc.perform(
-                        get("/tasks/status/{status}", task.getStatus().getName())
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks/status/{status}", task.getStatus().getName())
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
@@ -159,12 +172,13 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_getByStatus_notFound() throws Exception {
         when(taskService.findByStatus(any())).thenReturn(Collections.emptyList());
 
         mockMvc.perform(
-                        get("/tasks/status/{status}", "test")
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks/status/{status}", "test")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
@@ -174,12 +188,13 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_getByStatus_unknownStatus() throws Exception {
         when(taskService.findByStatus(any())).thenThrow(UnknownTaskStatusException.class);
 
         mockMvc.perform(
-                        get("/tasks/status/{status}", "xyz")
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks/status/{status}", "xyz")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errorCode").value(ErrorCodes.UNKNOWN_TASK_STATUS));
@@ -188,12 +203,13 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_getAll() throws Exception {
         when(taskService.findAllForLoggedUser()).thenReturn(Collections.singletonList(dummyEntity()));
 
         mockMvc.perform(
-                        get("/tasks")
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray());
@@ -202,12 +218,13 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_getAll_notFound() throws Exception {
         when(taskService.findAllForLoggedUser()).thenReturn(Collections.emptyList());
 
         mockMvc.perform(
-                        get("/tasks")
-                                .accept(MediaType.APPLICATION_JSON))
+                get("/tasks")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
@@ -217,14 +234,16 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_createTask() throws Exception {
         when(taskService.create(any())).thenReturn(dummyEntity());
 
         mockMvc.perform(
-                        post("/tasks")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(new ObjectMapper().writeValueAsString(dummyDTO()))
-                                .accept(MediaType.APPLICATION_JSON))
+                post("/tasks")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(dummyDTO()))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").isNotEmpty());
@@ -233,6 +252,7 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_updateTask() throws Exception {
         Task task = dummyEntity();
         UpdateTaskRequestDTO requestDTO = new UpdateTaskRequestDTO(null, "newDesc");
@@ -240,10 +260,11 @@ class TaskControllerTest {
         when(taskService.update(anyString(), any())).thenReturn(task);
 
         mockMvc.perform(
-                        put("/tasks/{id}", task.getId())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(new ObjectMapper().writeValueAsString(requestDTO))
-                                .accept(MediaType.APPLICATION_JSON))
+                put("/tasks/{id}", task.getId())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDTO))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").isNotEmpty());
@@ -252,24 +273,29 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_updateTask_notFound() throws Exception {
+        UpdateTaskRequestDTO requestDTO = new UpdateTaskRequestDTO(null, "newDesc");
         when(taskService.update(anyString(), any())).thenThrow(TaskNotFoundException.class);
 
         mockMvc.perform(
-                        put("/tasks/{id}", "test")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(new ObjectMapper().writeValueAsString(null))
-                                .accept(MediaType.APPLICATION_JSON))
+                put("/tasks/{id}", "test")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDTO))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errorCode").value(ErrorCodes.TASK_NOT_FOUND));
     }
 
     @Test
+    @WithMockUser("spring")
     void test_deleteTask() throws Exception {
         mockMvc.perform(
-                        delete("/tasks/{id}", dummyDTO().getId())
-                                .accept(MediaType.APPLICATION_JSON))
+                delete("/tasks/{id}", dummyDTO().getId())
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").value(Boolean.TRUE));
@@ -278,11 +304,13 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_changeStatus() throws Exception {
         when(taskService.changeStatus(anyString(), anyString())).thenReturn(dummyEntity());
 
         mockMvc.perform(
                 put("/tasks/{id}/{status}", dummyDTO().getId(), dummyDTO().getStatus())
+                        .with(csrf())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -292,11 +320,13 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_changeStatus_taskNotFound() throws Exception {
         when(taskService.changeStatus(anyString(), anyString())).thenThrow(TaskNotFoundException.class);
 
         mockMvc.perform(
                 put("/tasks/{id}/{status}", dummyDTO().getId(), dummyDTO().getStatus())
+                        .with(csrf())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -304,11 +334,13 @@ class TaskControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_changeStatus_unknownStatus() throws Exception {
         when(taskService.changeStatus(anyString(), anyString())).thenThrow(UnknownTaskStatusException.class);
 
         mockMvc.perform(
                 put("/tasks/{id}/{status}", dummyDTO().getId(), dummyDTO().getStatus())
+                        .with(csrf())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

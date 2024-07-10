@@ -19,12 +19,14 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -48,6 +50,7 @@ class UserControllerTest {
     private JwtService jwtService;
 
     @Test
+    @WithMockUser("spring")
     void test_getUser() throws Exception {
         when(userService.getLoggedUser()).thenReturn(dummyEntity());
 
@@ -61,6 +64,7 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_updateUser() throws Exception {
         User user = dummyEntity();
         UpdateUserRequestDTO requestDTO = new UpdateUserRequestDTO(null, "test", null);
@@ -69,6 +73,7 @@ class UserControllerTest {
 
         mockMvc.perform(
                 put("/users")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDTO))
                         .accept(MediaType.APPLICATION_JSON))
@@ -80,13 +85,16 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_updateUser_notFound() throws Exception {
+        UpdateUserRequestDTO requestDTO = new UpdateUserRequestDTO(null, "test", null);
         when(userService.update(any())).thenThrow(UserNotFoundException.class);
 
         mockMvc.perform(
                 put("/users")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(null))
+                        .content(new ObjectMapper().writeValueAsString(requestDTO))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -94,9 +102,11 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_deleteUser() throws Exception {
         mockMvc.perform(
                 delete("/users")
+                        .with(csrf())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -106,11 +116,13 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_changePassword() throws Exception {
         ChangePasswordRequestDTO requestDTO = new ChangePasswordRequestDTO("test", "test");
         when(userService.changePassword(any(), any())).thenReturn(Boolean.TRUE);
 
         mockMvc.perform(put("/users/change-password")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDTO))
                         .accept(MediaType.APPLICATION_JSON))
@@ -122,12 +134,15 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser("spring")
     void test_changePassword_badCredentials() throws Exception {
+        ChangePasswordRequestDTO requestDTO = new ChangePasswordRequestDTO("test", "test");
         when(userService.changePassword(any(), any())).thenThrow(BadCredentialsException.class);
 
         mockMvc.perform(put("/users/change-password")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(null))
+                        .content(new ObjectMapper().writeValueAsString(requestDTO))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
