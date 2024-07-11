@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
         info = @Info(
                 title = "todo-app",
-                description = "Basic todo application API"
+                description = "Basic todo application API",
+                version = "1.0"
         )
 )
 public class OpenApiConfig {
