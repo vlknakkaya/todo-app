@@ -25,23 +25,23 @@ public class TaskService {
     }
 
     public List<Task> findByTitleContainingIgnoreCase(String title) {
-        return taskRepository.findByUserAndTitleContainingIgnoreCase(authService.getLoggedUser(), title);
+        return taskRepository.findByUserIdAndTitleContainingIgnoreCase(authService.getLoggedUser().getId(), title);
     }
 
     public List<Task> findByDescriptionContainingIgnoreCase(String description) {
-        return taskRepository.findByUserAndDescriptionContainingIgnoreCase(authService.getLoggedUser(), description);
+        return taskRepository.findByUserIdAndDescriptionContainingIgnoreCase(authService.getLoggedUser().getId(), description);
     }
 
     public List<Task> findByStatus(String status) throws UnknownTaskStatusException {
-        return taskRepository.findByUserAndStatus(authService.getLoggedUser(), TaskStatus.of(status));
+        return taskRepository.findByUserIdAndStatus(authService.getLoggedUser().getId(), TaskStatus.of(status));
     }
 
     public List<Task> findAllForLoggedUser() {
-        return taskRepository.findByUser(authService.getLoggedUser());
+        return taskRepository.findByUserId(authService.getLoggedUser().getId());
     }
 
     public Task getById(String id) throws TaskNotFoundException {
-        return taskRepository.findByUserAndId(authService.getLoggedUser(), id)
+        return taskRepository.findByUserIdAndId(authService.getLoggedUser().getId(), id)
                 .orElseThrow(() -> new TaskNotFoundException("id", id));
     }
 

@@ -12,14 +12,14 @@ import java.util.Optional;
 @Repository
 public interface TaskRepository extends CouchbaseRepository<Task, String> {
 
-    List<Task> findByUserAndTitleContainingIgnoreCase(User user, String title);
+    List<Task> findByUserIdAndTitleContainingIgnoreCase(String userId, String title);
 
-    List<Task> findByUserAndDescriptionContainingIgnoreCase(User user, String description);
+    List<Task> findByUserIdAndDescriptionContainingIgnoreCase(String userId, String description);
 
-    List<Task> findByUserAndStatus(User user, TaskStatus status);
+    List<Task> findByUserIdAndStatus(String userId, TaskStatus status);
 
-    Optional<Task> findByUserAndId(User user, String id);
+    Optional<Task> findByUserIdAndId(String userId, String id);
 
-    List<Task> findByUser(User user);
+    List<Task> findByUserId(String userId);
 
 }

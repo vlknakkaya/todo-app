@@ -9,6 +9,7 @@ import com.todoapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,7 +33,8 @@ public class AuthService {
     }
 
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) throws AuthenticationException {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword()));
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String token = jwtService.generateToken(getLoggedUser());
 

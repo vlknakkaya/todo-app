@@ -41,7 +41,7 @@ class TaskServiceTest {
         taskService.findByTitleContainingIgnoreCase("title");
 
         verify(authService, times(1)).getLoggedUser();
-        verify(taskRepository, times(1)).findByUserAndTitleContainingIgnoreCase(any(), any());
+        verify(taskRepository, times(1)).findByUserIdAndTitleContainingIgnoreCase(any(), any());
     }
 
     @Test
@@ -51,7 +51,7 @@ class TaskServiceTest {
         taskService.findByDescriptionContainingIgnoreCase("description");
 
         verify(authService, times(1)).getLoggedUser();
-        verify(taskRepository, times(1)).findByUserAndDescriptionContainingIgnoreCase(any(), any());
+        verify(taskRepository, times(1)).findByUserIdAndDescriptionContainingIgnoreCase(any(), any());
     }
 
     @Test
@@ -61,11 +61,13 @@ class TaskServiceTest {
         taskService.findByStatus(TaskStatus.DONE.getName());
 
         verify(authService, times(1)).getLoggedUser();
-        verify(taskRepository, times(1)).findByUserAndStatus(any(), any());
+        verify(taskRepository, times(1)).findByUserIdAndStatus(any(), any());
     }
 
     @Test
     void test_findByStatus_unknownStatus() {
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+
         assertThrows(UnknownTaskStatusException.class, () -> taskService.findByStatus("xyz"));
     }
 
@@ -76,22 +78,24 @@ class TaskServiceTest {
         taskService.findAllForLoggedUser();
 
         verify(authService, times(1)).getLoggedUser();
-        verify(taskRepository, times(1)).findByUser(any());
+        verify(taskRepository, times(1)).findByUserId(any());
     }
 
     @Test
     void test_getById() {
         User user = dummyUser();
         when(authService.getLoggedUser()).thenReturn(user);
-        when(taskRepository.findByUserAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
+        when(taskRepository.findByUserIdAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
 
         taskService.getById("123");
 
-        verify(taskRepository, times(1)).findByUserAndId(user, "123");
+        verify(taskRepository, times(1)).findByUserIdAndId(user.getId(), "123");
     }
 
     @Test
     void test_getById_notFound() {
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+
         assertThrows(TaskNotFoundException.class, () -> taskService.getById("123"));
     }
 
@@ -110,17 +114,19 @@ class TaskServiceTest {
         UpdateTaskRequestDTO updateTaskRequestDTO = new UpdateTaskRequestDTO("title", "description");
 
         when(authService.getLoggedUser()).thenReturn(dummyUser());
-        when(taskRepository.findByUserAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
+        when(taskRepository.findByUserIdAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
 
         taskService.update("123456", updateTaskRequestDTO);
 
         verify(authService, times(1)).getLoggedUser();
-        verify(taskRepository, times(1)).findByUserAndId(any(), any());
+        verify(taskRepository, times(1)).findByUserIdAndId(any(), any());
         verify(taskRepository, times(1)).save(any());
     }
 
     @Test
     void test_update_notFound() {
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+
         UpdateTaskRequestDTO updateTaskRequestDTO = new UpdateTaskRequestDTO("title", "description");
 
         assertThrows(TaskNotFoundException.class, () -> taskService.update("123456", updateTaskRequestDTO));
@@ -135,23 +141,27 @@ class TaskServiceTest {
 
     @Test
     void test_changeStatus() {
-        when(taskRepository.findByUserAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+        when(taskRepository.findByUserIdAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
 
         taskService.changeStatus("12345", TaskStatus.DONE.getName());
 
         verify(authService, times(1)).getLoggedUser();
-        verify(taskRepository, times(1)).findByUserAndId(any(), any());
+        verify(taskRepository, times(1)).findByUserIdAndId(any(), any());
         verify(taskRepository, times(1)).save(any());
     }
 
     @Test
     void test_changeStatus_notFound() {
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+
         assertThrows(TaskNotFoundException.class, () -> taskService.changeStatus("123456", TaskStatus.DONE.getName()));
     }
 
     @Test
     void test_changeStatus_unknownStatus() {
-        when(taskRepository.findByUserAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
+        when(authService.getLoggedUser()).thenReturn(dummyUser());
+        when(taskRepository.findByUserIdAndId(any(), any())).thenReturn(Optional.of(dummyTask()));
 
         assertThrows(UnknownTaskStatusException.class, () -> taskService.changeStatus("123456", "xyz"));
     }
