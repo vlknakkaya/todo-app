@@ -13,7 +13,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 @EnableCouchbaseRepositories(basePackages = { "com.todoapp" })
 public class CouchbaseConfig extends AbstractCouchbaseConfiguration {
 
-    public static final String SERVER = "localhost";
+    public static final String SERVER = "database";
     public static final String USERNAME = "Administrator";
     public static final String PASSWORD = "123456";
     public static final String BUCKET_NAME = "todoapp";
